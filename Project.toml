@@ -1,0 +1,4 @@
+name = "StructureSolver"
+uuid = "86949bca-1401-4ad7-afb8-e041cb4ccbe4"
+authors = ["abatrakov "]
+version = "0.1.0"
