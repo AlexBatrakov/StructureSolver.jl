@@ -11,18 +11,20 @@ addprocs(8)
 
 
 #high_eos_names = collect(keys(StructureSolver.high_pwp3_eos_base))
-high_eos_names = [:WFF1, :MPA1, :NL3, :Rs, :GM1, :SKb, :SLY2, :DDME2, :BSP, :BSR6Y, :GM1Y, :SK272, :SkI6, :H4, :TM1, :SLY9, :DD2, :SLY4, :NL3Yss, :ENG, :BSR2, :SkMP, :BSk22, :SKa, :NL3Y, :FSUGarnet, :NL3ωY, :IOPB, :DDHd, :DDME2Y, :FSU2, :SkI4, :BSk24, :APR3, :SLy, :NL3ωYss, :SkI3, :BSR6, :NL3ω, :SLY230a, :MS1, :BSk23, :WFF2, :MS1b, :Model1, :APR4, :SK255, :BSk20, :SkI5, :SkI2, :BSk25, :BSk26, :BSk21, :DD2Y]
+#high_eos_names = [:WFF1, :MPA1, :NL3, :Rs, :GM1, :SKb, :SLY2, :DDME2, :BSP, :BSR6Y, :GM1Y, :SK272, :SkI6, :H4, :TM1, :SLY9, :DD2, :SLY4, :NL3Yss, :ENG, :BSR2, :SkMP, :BSk22, :SKa, :NL3Y, :FSUGarnet, :NL3ωY, :IOPB, :DDHd, :DDME2Y, :FSU2, :SkI4, :BSk24, :APR3, :SLy, :NL3ωYss, :SkI3, :BSR6, :NL3ω, :SLY230a, :MS1, :BSk23, :WFF2, :MS1b, :Model1, :APR4, :SK255, :BSk20, :SkI5, :SkI2, :BSk25, :BSk26, :BSk21, :DD2Y]
+high_eos_names = [:SLy, :APR3, :APR4, :WFF1, :WFF2, :ENG, :MPA1, :MS1, :MS1b, :H4, :ALF2]
 
 @everywhere function calculate_grid(high_eos::Symbol)
 	model_type = DEFp_Model{Float64,DEF1_CouplingFunction,PWP_EoS}
-	int_params = IntParams(maxiters=1e4, dtmax=1.0, reltol=1e-9, abstol=1e-9)
-	pc_grid = vcat(LogRange(1e34, 5e34, 1+25)[1:end-1], LogRange(5e34, 5e35, 1+100), LogRange(5e35, 1e36, 1+25)[2:end])
+	int_params = IntParams(maxiters=1e4, dtmax=1.0, reltol=1e-11, abstol=1e-11)
+	pc_grid = vcat(LogRange(1e34, 5e34, 1+20)[1:end-1], LogRange(5e34, 5e35, 1+80), LogRange(5e35, 1e36, 1+20)[2:end])
 	inparams_fixed = Dict(:pc => pc_grid)
 	imparams_shooting = Dict(:φc => 4e-1)
 	quantities_fixed = Dict(:bc_φ∞ => 0.0)
 	α0_grid = -LogRange(1e-1, 1e-5, 1+5*20)
 #	β0_grid = collect(LinRange(-6.0, +6.0, N_β0))
-	β0_grid = vcat(collect(LinRange(-6.0, -5.0, 1+20))[1:end-1],collect(LinRange(-5.0, -4.0, 1+100))[1:end-1], collect(LinRange(-4.0, +6.0, 1+20*10)))
+	β0_grid = vcat(collect(LinRange(-6.0, -5.0, 1+20))[1:end-1],collect(LinRange(-5.0, -4.0, 1+50))[1:end-1], collect(LinRange(-4.0, +10.0, 1+20*14)))
+	N_α0, N_β0, N_pc = length(α0_grid), length(β0_grid), length(pc_grid)
 	N_α0, N_β0, N_pc = length(α0_grid), length(β0_grid), length(pc_grid)
 	exparams = Dict(:α0 => α0_grid, :β0 => β0_grid, :low_eos => :SLy, :high_eos => high_eos)
 	regime = ShootingRegime{Float64}(inparams_fixed, imparams_shooting, quantities_fixed, exparams)
@@ -37,7 +39,7 @@ high_eos_names = [:WFF1, :MPA1, :NL3, :Rs, :GM1, :SKb, :SLY2, :DDME2, :BSP, :BSR
 	function write_3Dgrid(grid_name, grid)
 		open("$high_eos/$grid_name.dat", "w") do io
 			for i in 1:N_α0, j in 1:N_β0
-				writedlm(io, transpose(vcat(i, j, grid[:,i,j])))
+				writedlm(io, transpose(vcat(i, j, round(grid[:,i,j], sigdigits=10))))
 			end
 		end
 	end
@@ -70,7 +72,7 @@ function save_from_jld(high_eos::Symbol)
 	function write_3Dgrid(grid_name, grid)
 		open("$high_eos/$grid_name.dat", "w") do io
 			for i in 1:N_α0, j in 1:N_β0
-				writedlm(io, transpose(vcat(i, j, grid[:,i,j])))
+				writedlm(io, transpose(vcat(i, j, round(grid[:,i,j], sigdigits=10))))
 			end
 		end
 	end
