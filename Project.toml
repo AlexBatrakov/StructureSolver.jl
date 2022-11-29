@@ -1,6 +1,6 @@
 name = "StructureSolver"
 uuid = "86949bca-1401-4ad7-afb8-e041cb4ccbe4"
-authors = ["abatrakov "]
+authors = ["Alexander Batrakov <batrakovalex.astro@gmail.com>"]
 version = "0.1.0"
 
 [deps]
