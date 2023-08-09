@@ -12,7 +12,8 @@ addprocs(8)
 
 #high_eos_names = collect(keys(StructureSolver.high_pwp3_eos_base))
 #high_eos_names = [:WFF1, :MPA1, :NL3, :Rs, :GM1, :SKb, :SLY2, :DDME2, :BSP, :BSR6Y, :GM1Y, :SK272, :SkI6, :H4, :TM1, :SLY9, :DD2, :SLY4, :NL3Yss, :ENG, :BSR2, :SkMP, :BSk22, :SKa, :NL3Y, :FSUGarnet, :NL3ωY, :IOPB, :DDHd, :DDME2Y, :FSU2, :SkI4, :BSk24, :APR3, :SLy, :NL3ωYss, :SkI3, :BSR6, :NL3ω, :SLY230a, :MS1, :BSk23, :WFF2, :MS1b, :Model1, :APR4, :SK255, :BSk20, :SkI5, :SkI2, :BSk25, :BSk26, :BSk21, :DD2Y]
-high_eos_names = [:SLy, :APR3, :APR4, :WFF1, :WFF2, :ENG, :MPA1, :MS1, :MS1b, :H4, :ALF2]
+#high_eos_names = [:SLy, :APR3, :APR4, :WFF1, :WFF2, :ENG, :MPA1, :MS1, :MS1b, :H4, :ALF2]
+high_eos_names = [:BSk22]
 
 @everywhere function calculate_grid(high_eos::Symbol)
 	model_type = DEFp_Model{Float64,DEF1_CouplingFunction,PWP_EoS}
@@ -39,7 +40,7 @@ high_eos_names = [:SLy, :APR3, :APR4, :WFF1, :WFF2, :ENG, :MPA1, :MS1, :MS1b, :H
 	function write_3Dgrid(grid_name, grid)
 		open("$high_eos/$grid_name.dat", "w") do io
 			for i in 1:N_α0, j in 1:N_β0
-				writedlm(io, transpose(vcat(i, j, round(grid[:,i,j], sigdigits=10))))
+				writedlm(io, transpose(vcat(i, j, round.(grid[:,i,j], sigdigits=10))))
 			end
 		end
 	end
@@ -72,7 +73,7 @@ function save_from_jld(high_eos::Symbol)
 	function write_3Dgrid(grid_name, grid)
 		open("$high_eos/$grid_name.dat", "w") do io
 			for i in 1:N_α0, j in 1:N_β0
-				writedlm(io, transpose(vcat(i, j, round(grid[:,i,j], sigdigits=10))))
+				writedlm(io, transpose(vcat(i, j, round.(grid[:,i,j], sigdigits=10))))
 			end
 		end
 	end
