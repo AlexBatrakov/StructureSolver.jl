@@ -10,6 +10,15 @@ calculate(simulation::AbstractSimulation) = error("It is not defined how to calc
 #realisations
 #-----------------------------------------------------
 
+"""
+    IntParams(; maxiters, dtmax, reltol, abstol)
+
+Integration / solver parameters used across simulations.
+
+- `maxiters`: maximum solver iterations.
+- `dtmax`: maximum step size.
+- `reltol`, `abstol`: relative/absolute tolerances.
+"""
 struct IntParams
 	maxiters::Float64
 	dtmax::Float64
@@ -20,12 +29,27 @@ end
 IntParams(;maxiters::Float64, dtmax::Float64, reltol::Float64, abstol::Float64) = IntParams(maxiters, dtmax, reltol, abstol)
 
 
+"""
+    SingleSimulation(model, regime, int_params)
+
+Solve a single stellar model for a given `model` and `regime`.
+
+Run with `calculate!(sim)`.
+"""
 struct SingleSimulation{T <: AbstractModel, P <: AbstractRegime} <: AbstractSimulation
 	model::T
 	regime::P
 	int_params::IntParams
 end
 
+"""
+	calculate!(simulation)
+
+Run a simulation in-place and return it.
+
+Implemented for `SingleSimulation`, `FamilySimulation`, `GridSimulation` (with a constructor callback),
+and `GeneralSimulation`.
+"""
 function calculate!(simulation::SingleSimulation{T, P}) where {T <: AbstractModel, P <: AbstractRegime}
 	model = simulation.model
 	regime = simulation.regime
@@ -80,6 +104,13 @@ function save_result!(family::Family{T}, I::CartesianIndex) where {T <: Abstract
 	end
 end
 
+"""
+	FamilySimulation(sample_model, regime, family_params, int_params)
+
+Scan one (or several) parameters and store results on an N-D grid.
+
+Results are stored in `sim.family.inparams`, `sim.family.quantities`, and `sim.family.derivatives`.
+"""
 struct FamilySimulation{T <: AbstractModel, P <: AbstractRegime} <: AbstractSimulation
 	family::Family{T}
 	regime::P
@@ -256,6 +287,19 @@ end
 
 Grid(sample_model::T, family_params::Dict{Symbol,Vector{Float64}}, grid_params::Dict{Symbol,Q} where {Q <: Vector}) where {T <: AbstractModel} = Grid{T}(sample_model, family_params, grid_params)
 
+"""
+	GridSimulation(sample_model, sample_regime, family_params, grid_params, int_params)
+
+Grid-of-families simulation.
+
+Typically you will use the convenience constructor:
+
+	sim = GridSimulation(family_constructor, family_params, grid_params, int_params)
+
+and then run:
+
+	calculate!(sim, family_constructor)
+"""
 struct GridSimulation{T <: AbstractModel, P <: AbstractRegime} <: AbstractSimulation
 	grid::Grid{T}
 	sample_regime::P
@@ -265,7 +309,6 @@ struct GridSimulation{T <: AbstractModel, P <: AbstractRegime} <: AbstractSimula
 		return new(grid, sample_regime, int_params)
 	end
 end
-
 GridSimulation(sample_model::T, sample_regime::P, family_params::Dict{Symbol,Vector{Float64}},  grid_params::Dict{Symbol,Q} where {Q <: Vector}, int_params::IntParams) where {T <: AbstractModel, P <: AbstractRegime} = GridSimulation{T,P}(sample_model, sample_regime, family_params, grid_params, int_params)
 
 function GridSimulation(family_constructor, family_params::Dict{Symbol,Vector{Float64}},  grid_params::Dict{Symbol,Q} where {Q <: Vector}, int_params::IntParams)
@@ -335,6 +378,13 @@ function Base.show(io::IO, data::SimulationData)
 	return nothing
 end
 
+"""
+	GeneralSimulation(model_type, regime, int_params)
+
+Run an N-D parameter scan with `ShootingRegime` and store outputs in `sim.data`.
+
+Results are stored in `sim.data.quantities` and `sim.data.derivatives` as N-D arrays.
+"""
 struct GeneralSimulation{T1 <: Real, T2 <: AbstractRegime, N} <: AbstractSimulation
 	model_type::DataType
 	regime::T2
@@ -350,7 +400,6 @@ struct GeneralSimulation{T1 <: Real, T2 <: AbstractRegime, N} <: AbstractSimulat
 		return new{T1,T2,N}(model_type, regime, data, int_params)
 	end
 end
-
 GeneralSimulation(model_type::DataType, regime::T2, int_params::IntParams) where {T2 <: AbstractRegime} = GeneralSimulation{Float64}(model_type, regime, int_params)
 
 function Base.show(io::IO, simulation::GeneralSimulation)
@@ -365,6 +414,14 @@ function Base.show(io::IO, simulation::GeneralSimulation)
 end
 
 
+"""
+	ShootingRegime(inparams_fixed, inparams_shooting, quantities_fixed, exparams)
+
+General shooting regime that supports mixing fixed values and grids.
+
+Dict values can be either scalars (fixed) or vectors (grid dimensions). This regime is used together
+with `GeneralSimulation`.
+"""
 struct ShootingRegime{T <: Real} <: AbstractShootingRegime
 	inparams_fixed::Dict{Symbol,T}
 	inparams_fixed_grid::Dict{Symbol,Vector{T}}
@@ -434,7 +491,6 @@ struct ShootingRegime{T <: Real} <: AbstractShootingRegime
 			exparams_symbolic_grid)
 	end
 end
-
 ShootingRegime(inparams_fixed_in::Dict{Symbol}, inparams_shooting_in::Dict{Symbol}, quantities_fixed_in::Dict{Symbol}, exparams_in::Dict{Symbol}) = ShootingRegime{Float64}(inparams_fixed_in, inparams_shooting_in, quantities_fixed_in, exparams_in)
 
 function get_params_names(regime::ShootingRegime)

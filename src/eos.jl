@@ -1,11 +1,63 @@
 abstract type AbstractEoS end
 
+raw"""
+    get_density(eos, val; from, units=:cgs)
+
+Convert an input `val` to mass density $\rho$.
+
+`from` specifies what `val` represents (e.g. `:pressure`, `:density`, `:number_density`).
+`units` controls unit conventions; most implementations support `:cgs` and sometimes `:natural`.
+"""
 get_density(eos::AbstractEoS, val::Real; from::Symbol, units=:cgs) = error("Density method is not implemented for $(typeof(eos))")
+
+raw"""
+    get_number_density(eos, val; from, units=:cgs)
+
+Convert an input `val` to baryon number density $n$.
+
+`from` specifies what `val` represents.
+"""
 get_number_density(eos::AbstractEoS, val::Real; from::Symbol, units=:cgs) = error("Number density method is not implemented for $(typeof(eos))")
+
+"""
+    get_pressure(eos, val; from, units=:cgs)
+
+Return pressure corresponding to `val`.
+
+`from` specifies what `val` represents. In CGS, pressure is typically returned in dyn/cm^2.
+"""
 get_pressure(eos::AbstractEoS, val::Real; from::Symbol, units=:cgs) = error("Pressure method is not implemented for $(typeof(eos))")
+
+"""
+    get_energy_density(eos, val; from, units=:cgs)
+
+Return energy density corresponding to `val`.
+
+In CGS, this is typically returned in erg/cm^3.
+"""
 get_energy_density(eos::AbstractEoS, val::Real; from::Symbol, units=:cgs) = error("Energy density method is not implemented for $(typeof(eos))")
+
+"""
+    get_specific_enthalpy(eos, val; from, units=:cgs)
+
+Return specific enthalpy (implementation-dependent normalization) corresponding to `val`.
+"""
 get_specific_enthalpy(eos::AbstractEoS, val::Real; from::Symbol, units=:cgs) = error("Specific enthalpy method is not implemented for $(typeof(eos))")
+
+"""
+    get_sound_velocity(eos, val; from, units=:cgs)
+
+Return the (adiabatic) sound speed corresponding to `val`.
+
+In CGS, returned in cm/s.
+"""
 get_sound_velocity(eos::AbstractEoS, val::Real; from::Symbol, units=:cgs) = error("Sound velocity method is not implemented for $(typeof(eos))")
+
+"""
+    get_internal_energy(eos, val; from, units=:cgs)
+
+Return internal energy per unit mass (implementation-dependent normalization) corresponding to `val`.
+"""
 get_internal_energy(eos::AbstractEoS, val::Real; from::Symbol, units=:cgs) = error("Internal energy method is not implemented for $(typeof(eos))")
 
 get_pressure(eos::AbstractEoS, val_arr::Vector{T}; from::Symbol, units=:cgs) where {T<:Real} = [get_pressure(eos, val, from=from, units=units) for val in val_arr]
@@ -26,6 +78,14 @@ get_sound_velocity(eos::AbstractEoS, val_arr::Vector{T}; from::Symbol, units=:cg
 #    return getfield(ST_gravity, get_funs[what])(eos, val, from=from, units=units)
 #end
 
+"""Piecewise-polytropic equation of state.
+
+`PWP_EoS` supports several constructors, including a convenient named form:
+
+    PWP_EoS(low_eos=:SLy, high_eos=:MPA1)
+
+The EoS provides `get_density`, `get_pressure`, `get_energy_density`, etc.
+"""
 struct PWP_EoS <: AbstractEoS
     ρ::Vector{Float64}
     Γ::Vector{Float64}
@@ -54,7 +114,6 @@ struct PWP_EoS <: AbstractEoS
         return new(ρ, Γ, K, p, a, N, params)
     end
 end
-
 function PWP_EoS(ρ::Array{Float64,1}, Γ::Array{Float64,1}, K::Array{Float64,1}, params::Dict{Symbol}=Dict{Symbol,Any}())
     p1 = K[1] * c^2 * ρ[1] ^ Γ[1]
     return PWP_EoS(p1, ρ, Γ, params)
@@ -309,6 +368,11 @@ const high_pwp3_eos_base = Dict(
     :PhTr2     => [34.495, 3.446, 0.000, 2.887]
 )
 
+"""
+    high_pwp3_eos_names
+
+Names (symbols) of built-in high-density piecewise-polytrope parameter sets available for `PWP_EoS`.
+"""
 const high_pwp3_eos_names = collect(keys(high_pwp3_eos_base))
 
 const high_pwp_eos_base = Dict(
@@ -319,6 +383,13 @@ const high_pwp_eos_base = Dict(
 const high_pwp_eos_names = collect(keys(high_pwp_eos_base))
 
 
+"""
+    find_max_pressure(eos::PWP_EoS; c_max=c)
+
+Return an estimate of the maximum pressure (in CGS) for which the sound speed does not exceed `c_max`.
+
+This is useful for building central-pressure grids that avoid superluminal sound speeds.
+"""
 function find_max_pressure(eos::PWP_EoS; c_max=c)
     cs_38 = get_sound_velocity(eos, 1e38, from=:pressure)
     if cs_38 > c_max
@@ -329,6 +400,11 @@ function find_max_pressure(eos::PWP_EoS; c_max=c)
     return p_max
 end
 
+raw"""
+    Polytropic_EoS(K, Γ)
+
+Simple polytropic equation of state with $p = K\,\rho^{\Gamma}$.
+"""
 struct Polytropic_EoS <: AbstractEoS
     K::Float64
     Γ::Float64
@@ -444,6 +520,14 @@ function smooth(η)
     return η_sm
 end
 
+"""
+    Table_EoS(n, ε, p)
+
+Tabulated equation of state.
+
+Inputs are vectors of baryon number density `n`, energy density `ε`, and pressure `p`.
+Interpolation is used to evaluate thermodynamic quantities.
+"""
 struct Table_EoS <: AbstractEoS
     N::Int64
     n::Vector{Float64}
@@ -472,7 +556,6 @@ struct Table_EoS <: AbstractEoS
         return new(N, n, ε, p, ε_n_l, ε_n_r, ε_nn_l, ε_nn_r, name)
     end
 end
-
 function get_derivative0(Q::Vector, x::Vector)
     N = length(Q)
     dQ_dx = similar(Q)

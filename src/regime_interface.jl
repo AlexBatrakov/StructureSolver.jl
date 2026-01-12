@@ -30,6 +30,16 @@ end
 #realisations of DirectRegime
 
 #Simple_DirectRegime
+"""
+    Simple_DirectRegime(inparams_fixed, exparams)
+
+Direct (non-shooting) regime.
+
+- `inparams_fixed`: fixed inner parameters (e.g. `:pc`, `:φc`).
+- `exparams`: fixed external parameters (e.g. `:α0`, `:β0`).
+
+Used with `SingleSimulation` / `FamilySimulation`.
+"""
 struct Simple_DirectRegime <: AbstractDirectRegime
 	inparams_fixed::Dict{Symbol, Float64}
 	exparams::Dict{Symbol, Float64}
@@ -129,6 +139,16 @@ boundary_conditions!(model::AbstractModel, regime::AbstractShootingRegime) = err
 #realisations of ShootingRegime
 
 #Simple_ShootingRegime
+"""
+    Simple_ShootingRegime(inparams_fixed, exparams, exparams_symbolic, inparams_shooting, quantities_fixed)
+
+Shooting regime for a single model.
+
+The solver varies parameters in `inparams_shooting` to satisfy target boundary conditions given by
+`quantities_fixed`.
+
+Typical use: shoot on `:φc` to enforce `:bc_φ∞ == 0.0`.
+"""
 struct Simple_ShootingRegime <: AbstractShootingRegime
 	inparams_fixed::Dict{Symbol, Float64}
 	exparams::Dict{Symbol, Float64}

@@ -4,12 +4,45 @@
 
 abstract type AbstractCouplingFunction end
 
+raw"""
+    A_fun(cf, exparams, φ)
+
+Coupling function $A(\varphi)$ used in DEF-type scalar-tensor gravity.
+"""
 A_fun(cf::AbstractCouplingFunction, exparams::Dict, φ::Real) = error("A-function is not defined for $(typeof(cf))")
+
+"""
+    V_fun(cf, exparams, φ)
+
+Convenience potential-like function (implementation-specific) associated with the coupling.
+"""
 V_fun(cf::AbstractCouplingFunction, exparams::Dict, φ::Real) = error("V-function is not defined for $(typeof(cf))")
+
+raw"""
+    α_fun(cf, exparams, φ)
+
+Coupling strength $\alpha(\varphi) = d\ln A / d\varphi$.
+"""
 α_fun(cf::AbstractCouplingFunction, exparams::Dict, φ::Real) = error("α-function is not defined for $(typeof(cf))")
+
+raw"""
+    β_fun(cf, exparams, φ)
+
+Second coupling derivative (implementation-dependent; often $\beta(\varphi) = d\alpha/d\varphi$).
+"""
 β_fun(cf::AbstractCouplingFunction, exparams::Dict, φ::Real) = error("β-function is not defined for $(typeof(cf))")
+
+"""
+    φ∞_const(cf, exparams)
+
+Asymptotic scalar-field value used as a reference for boundary conditions.
+"""
 φ∞_const(cf::AbstractCouplingFunction, exparams::Dict) = error("φ∞-constant is not defined for $(typeof(cf))")
 
+"""DEF1 coupling function.
+
+Typically parameterized by external parameters `:α0` and `:β0`.
+"""
 struct DEF1_CouplingFunction <: AbstractCouplingFunction end
 
 A_fun(cf::DEF1_CouplingFunction, exparams::Dict, φ::Real) = exp(exparams[:α0] * φ + 0.5 * exparams[:β0] * φ^2)
@@ -19,6 +52,10 @@ V_fun(cf::DEF1_CouplingFunction, exparams::Dict, φ::Real) = exparams[:α0] * φ
 φ∞_const(cf::DEF1_CouplingFunction, exparams::Dict) = 0.0
 get_params(cf::DEF1_CouplingFunction) = Dict(:α0 => NaN, :β0 => NaN)
 
+"""DEF3 coupling function.
+
+Typically parameterized by external parameters `:α0` and `:β0`.
+"""
 struct DEF3_CouplingFunction <: AbstractCouplingFunction end
 
 A_fun(cf::DEF3_CouplingFunction, exparams::Dict, φ::Real) = exp(0.5 * exparams[:β0] * φ^2)
@@ -29,8 +66,18 @@ V_fun(cf::DEF3_CouplingFunction, exparams::Dict, φ::Real) = 0.5 * exparams[:β0
 get_params(cf::DEF3_CouplingFunction) = Dict(:α0 => NaN, :β0 => NaN)
 
 
-#DEFp_Model{T}
+"""
+    DEFp_Model{T}(cf, eos)
 
+Damour-Esposito-Farese scalar-tensor stellar-structure model.
+
+`cf` is a coupling-function instance (e.g. `DEF1_CouplingFunction()`), and `eos` is an equation of
+state (e.g. `PWP_EoS(...)`). The model stores
+
+- inner parameters `inparams` (e.g. `:pc`, `:φc`),
+- external parameters `exparams` / `exparams_symbolic`,
+- computed global `quantities` and `derivatives`.
+"""
 struct DEFp_Model{T1 <: Real, T2 <: AbstractCouplingFunction, T3 <: AbstractEoS} <: AbstractModel
     inparams::Dict{Symbol,T1}
     exparams::Dict{Symbol,T1}
@@ -43,7 +90,6 @@ struct DEFp_Model{T1 <: Real, T2 <: AbstractCouplingFunction, T3 <: AbstractEoS}
     n_odes::Int64
     rs_span::Tuple{Float64,Float64}
 end
-
 function DEFp_Model{T1}(cf::T2, eos::T3) where {T1 <: Real, T2 <: AbstractCouplingFunction, T3 <: AbstractEoS}
     inparams = Dict{Symbol,T1}(:φc => NaN, :pc => NaN)
     exparams_all = merge(get_params(cf), get_params(eos))
@@ -190,6 +236,14 @@ function update_rs_vars!(rs_vars::Vector, model::DEFp_Model)
     return nothing
 end
 
+"""
+    ode_system!(D_rs_vars::Vector, rs_vars::Vector, model::DEFp_Model, q::Real)
+
+Right-hand side for the stellar structure ODE system in DEF scalar-tensor gravity.
+
+`q` is a dimensionless pressure coordinate used internally by the solver (with physical pressure
+`p̃ = q * pc`, where `pc = model.inparams[:pc]`).
+"""
 function ode_system!(D_rs_vars::Vector, rs_vars::Vector, model::DEFp_Model, q::Real)
     μ, ν, φ, ψ, r, M̃, ω, ϖ = rs_vars
     p̃_c = model.inparams[:pc]
@@ -235,6 +289,13 @@ function ode_system!(D_rs_vars::Vector, rs_vars::Vector, model::DEFp_Model, q::R
     return D_rs_vars
 end
 
+"""
+    internal_physics(rs_vars::Vector, model::DEFp_Model, q::Real)
+
+Compute local matter quantities used by the ODE system.
+
+Returns `(A, α, ñ, ε̃)` evaluated at the current state.
+"""
 function internal_physics(rs_vars::Vector, model::DEFp_Model, q::Real)
     μ, ν, φ, ψ, r, M̃, ω, ϖ = rs_vars
     p̃_c = model.inparams[:pc]
@@ -257,6 +318,13 @@ function internal_physics(rs_vars::Vector, model::DEFp_Model, q::Real)
     return A, α, n, ε
 end
 
+"""
+    calculate_quantities(rs_solution, model::DEFp_Model; save_to_model::Bool)
+
+Post-process an ODE solution and compute global quantities/diagnostics.
+
+If `save_to_model=true`, results are written into `model.quantities`.
+"""
 function calculate_quantities(rs_solution, model::DEFp_Model; save_to_model::Bool)
 
     μ_c, ν_c, φ_c, ψ_c, r_c, M̃_c, ω_c, ϖ_c = rs_vars_c = rs_solution[1]

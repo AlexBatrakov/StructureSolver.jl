@@ -1,5 +1,12 @@
 rnd(U) = @sprintf("%0.4g", U)
 
+"""
+    LogRange(L, R, N)
+
+Return `N` logarithmically spaced points from `L` to `R` (inclusive).
+
+Equivalent to `10 .^ LinRange(log10(L), log10(R), N)`.
+"""
 LogRange(L, R, N) = 10.0 .^ LinRange(log10(L), log10(R), N)
 
     function print_dict(io::IO, dict::Dict)

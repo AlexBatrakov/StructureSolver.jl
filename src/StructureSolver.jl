@@ -41,5 +41,12 @@ module StructureSolver
 
 	export Simple_ShootingRegime, ShootingRegime, GeneralSimulation
 
+	"""
+	    calculate_old!(args...)
+
+	Backward-compatible alias for `calculate!`.
+	"""
+	calculate_old!(args...) = calculate!(args...)
+
 end # module
   
