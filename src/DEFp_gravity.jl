@@ -327,13 +327,13 @@ If `save_to_model=true`, results are written into `model.quantities`.
 """
 function calculate_quantities(rs_solution, model::DEFp_Model; save_to_model::Bool)
 
-    μ_c, ν_c, φ_c, ψ_c, r_c, M̃_c, ω_c, ϖ_c = rs_vars_c = rs_solution[1]
+    μ_c, ν_c, φ_c, ψ_c, r_c, M̃_c, ω_c, ϖ_c = rs_vars_c = rs_solution.u[1]
     q_c = rs_solution.t[1]
     p̃_c = model.inparams[:pc]
 
     A_c, α_c, ñ_c, ε̃_c = internal_physics(rs_vars_c, model, q_c)
 
-    μ_s, ν_s, φ_s, ψ_s, r_s, M̃_s, ω_s, ϖ_s = rs_vars_s = rs_solution[end]
+    μ_s, ν_s, φ_s, ψ_s, r_s, M̃_s, ω_s, ϖ_s = rs_vars_s = rs_solution.u[end]
     q_s = rs_solution.t[end]
     p̃_s = q_s * p̃_c
 
