@@ -8,12 +8,12 @@ module StructureSolver
 	#using OrdinaryDiffEq
 	using JLD
 	#using Dierckx
-	#using Roots
 	using NLsolve
 	#using Dates
 	using Printf
 	using Interpolations
 	using ForwardDiff
+	using Roots
 
 	include("physical_constants.jl")
 	include("eos.jl")

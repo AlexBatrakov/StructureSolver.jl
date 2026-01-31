@@ -490,7 +490,7 @@ Base.show(io::IO, eos::Table_EoS) = print(io, "Tabulated EoS ", eos.name, " with
 
 function get_density(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
     if from == :pressure
-        p_val = val
+        p_val = units == :natural ? val * c^2 : val
         return exp10(eos.lgplgρ(log10(p_val)))
     elseif from == :density
         return val
@@ -508,16 +508,19 @@ end
 
 function get_pressure(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
     ρ_val = get_density(eos, val, from=from, units=units)
-    return exp10(eos.lgρlgp(log10(ρ_val))) * factor(units)
+    p_cgs = exp10(eos.lgρlgp(log10(ρ_val)))
+    return units == :natural ? p_cgs / c^2 : p_cgs
 end
 
 function get_energy_density(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
     if from == :pressure
-        p_val = val
-        return exp10(eos.lgplgε(log10(p_val))) * factor(units)
+        p_val = units == :natural ? val * c^2 : val
+        ε_cgs = exp10(eos.lgplgε(log10(p_val)))
+        return units == :natural ? ε_cgs / c^2 : ε_cgs
     else
         ρ_val = get_density(eos, val, from=from, units=units)
-        return exp10(eos.lgρlgε(log10(ρ_val))) * factor(units)
+        ε_cgs = exp10(eos.lgρlgε(log10(ρ_val)))
+        return units == :natural ? ε_cgs / c^2 : ε_cgs
     end
 end
 
