@@ -1,5 +1,7 @@
 # StructureSolver.jl
 
+[![CI](https://github.com/AlexBatrakov/StructureSolver.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexBatrakov/StructureSolver.jl/actions/workflows/ci.yml)
+
 StructureSolver is a Julia package for solving 1D (spherically symmetric) relativistic stellar structure models in Damour-Esposito-Farese (DEF) scalar-tensor gravity, with helper tools for working with neutron-star equations of state (EoS).
 
 The package is primarily geared towards research workflows (parameter scans, families of stellar models, and derivative/sensitivity extraction).
