@@ -1,7 +1,8 @@
-# [test/runtests.jl]
-using StructureSolver
 using Test
+using StructureSolver
 
-# Test scripts
-# include()
-print(1+1)
+@testset "StructureSolver.jl" begin
+	include("test_utils.jl")
+	include("test_eos.jl")
+	include("test_smoke_solver.jl")
+end

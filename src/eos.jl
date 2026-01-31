@@ -448,36 +448,47 @@ function get_energy_density(eos::Polytropic_EoS, val::Real; from::Symbol, units=
 end
 
 
-const InterpolationType = Interpolations.Extrapolation{Float64,1,Interpolations.GriddedInterpolation{Float64,1,Float64,Gridded{Linear},Tuple{Array{Float64,1}}},Gridded{Linear},Line{Nothing}}
+"""
+        Table_EoS(name::Symbol)
 
-struct Table_EoS_old <: AbstractEoS
+Tabulated equation of state using simple linear interpolation in log-space.
+
+This is the "known-working" table EoS implementation.
+The input tables are taken from `table_eos_base` in `src/eos_data.jl`.
+
+Notes:
+- `table_eos_base` uses number density `n` in fm^-3, so this constructor converts `n -> ρ` via
+    `ρ = n * 10^39 * m_p` (in g/cm^3).
+- The Hermite-based experimental implementation is kept as `Table_EoS_Hermite`.
+"""
+struct Table_EoS <: AbstractEoS
     N::Int64
-    lgρlgε::InterpolationType
-    lgρlgp::InterpolationType
-    lgplgρ::InterpolationType
-    lgplgε::InterpolationType
+    lgρlgε::Any
+    lgρlgp::Any
+    lgplgρ::Any
+    lgplgε::Any
     name::Symbol
 
-    function Table_EoS_old(name::Symbol)
-        table_eos_old = sort(table_eos_old_base[name], dims=1)
-        lgρ = log10.(table_eos_old[:,1] .* 1e39 .* mp)
-        lgε = log10.(table_eos_old[:,2] .* c^2)
-        lgp = log10.(table_eos_old[:,3])
-        lgρlgε = LinearInterpolation(lgρ, lgε, extrapolation_bc = Line())
-        lgρlgp = LinearInterpolation(lgρ, lgp, extrapolation_bc = Line())
-        lgplgρ = LinearInterpolation(lgp, lgρ, extrapolation_bc = Line())
-        lgplgε = LinearInterpolation(lgp, lgε, extrapolation_bc = Line())
+    function Table_EoS(name::Symbol)
+        table = sort(table_eos_base[name], dims=1)
+        lgρ = log10.(table[:,1] .* 1e39 .* mp)
+        lgε = log10.(table[:,2] .* c^2)
+        lgp = log10.(table[:,3])
+        lgρlgε = linear_interpolation(lgρ, lgε; extrapolation_bc = Line())
+        lgρlgp = linear_interpolation(lgρ, lgp; extrapolation_bc = Line())
+        lgplgρ = linear_interpolation(lgp, lgρ; extrapolation_bc = Line())
+        lgplgε = linear_interpolation(lgp, lgε; extrapolation_bc = Line())
         N = length(lgρ)
         return new(N, lgρlgε, lgρlgp, lgplgρ, lgplgε, name)
     end
 end
 
-Table_EoS_old(eos_params::Dict{Symbol}) = Table_EoS_old(eos_params[:eos])
-get_params(eos::Table_EoS_old) = Dict(:eos => eos.name)
+Table_EoS(eos_params::Dict{Symbol}) = Table_EoS(eos_params[:eos])
+get_params(eos::Table_EoS) = Dict(:eos => eos.name)
 
-Base.show(io::IO, eos::Table_EoS_old) = print(io, "Tabulated EoS ", eos.name, " with ", eos.N, " points")
+Base.show(io::IO, eos::Table_EoS) = print(io, "Tabulated EoS ", eos.name, " with ", eos.N, " points")
 
-function get_density(eos::Table_EoS_old, val::Real; from::Symbol, units=:cgs)
+function get_density(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
     if from == :pressure
         p_val = val
         return exp10(eos.lgplgρ(log10(p_val)))
@@ -490,17 +501,17 @@ function get_density(eos::Table_EoS_old, val::Real; from::Symbol, units=:cgs)
     end
 end
 
-function get_number_density(eos::Table_EoS_old, val::Real; from::Symbol, units=:cgs)
+function get_number_density(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
     ρ_val = get_density(eos, val, from=from, units=units)
     return ρ_val / mp
 end
 
-function get_pressure(eos::Table_EoS_old, val::Real; from::Symbol, units=:cgs)
+function get_pressure(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
     ρ_val = get_density(eos, val, from=from, units=units)
     return exp10(eos.lgρlgp(log10(ρ_val))) * factor(units)
 end
 
-function get_energy_density(eos::Table_EoS_old, val::Real; from::Symbol, units=:cgs)
+function get_energy_density(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
     if from == :pressure
         p_val = val
         return exp10(eos.lgplgε(log10(p_val))) * factor(units)
@@ -508,6 +519,27 @@ function get_energy_density(eos::Table_EoS_old, val::Real; from::Symbol, units=:
         ρ_val = get_density(eos, val, from=from, units=units)
         return exp10(eos.lgρlgε(log10(ρ_val))) * factor(units)
     end
+end
+
+function get_sound_velocity(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
+    ρ_val = get_density(eos, val, from=from, units=units)
+    ρ_val <= 0 && error("Density must be positive")
+
+    # Finite-difference estimate of c_s^2 = dp/dε.
+    δ = 1e-4
+    ρ1 = ρ_val * (1 - δ)
+    ρ2 = ρ_val * (1 + δ)
+
+    p1 = get_pressure(eos, ρ1, from=:density, units=units)
+    p2 = get_pressure(eos, ρ2, from=:density, units=units)
+    ε1 = get_energy_density(eos, ρ1, from=:density, units=units)
+    ε2 = get_energy_density(eos, ρ2, from=:density, units=units)
+
+    denom = (ε2 - ε1)
+    denom == 0 && error("Unable to estimate dp/dε (ε is locally flat)")
+    cs2 = (p2 - p1) / denom
+    cs2 < 0 && error("Estimated dp/dε < 0 (table is not thermodynamically consistent near ρ=$(ρ_val))")
+    return sqrt(cs2) * c
 end
 
 function smooth(η)
@@ -521,14 +553,14 @@ function smooth(η)
 end
 
 """
-    Table_EoS(n, ε, p)
+    Table_EoS_Hermite(n, ε, p; name=:unknown)
 
-Tabulated equation of state.
+Experimental Hermite-interpolated table EoS.
 
-Inputs are vectors of baryon number density `n`, energy density `ε`, and pressure `p`.
-Interpolation is used to evaluate thermodynamic quantities.
+This implementation is intentionally *not* the default `Table_EoS` because it is
+unfinished / not validated for the bundled tables.
 """
-struct Table_EoS <: AbstractEoS
+struct Table_EoS_Hermite <: AbstractEoS
     N::Int64
     n::Vector{Float64}
     ε::Vector{Float64}
@@ -539,7 +571,7 @@ struct Table_EoS <: AbstractEoS
     ε_nn_r::Vector{Float64}
     name::Symbol
 
-    function Table_EoS(n::Vector, ε::Vector, p::Vector)
+    function Table_EoS_Hermite(n::Vector, ε::Vector, p::Vector; name::Symbol=:unknown)
         N = length(n)
 #        dE_dn = get_derivative(E, n)
         dε_dn = (ε .+ p) ./ n
@@ -552,9 +584,16 @@ struct Table_EoS <: AbstractEoS
         ε_nn_l = d2ε_dn2[1:N-1] .* (n[2:N] - n[1:N-1]).^2
         ε_nn_r = d2ε_dn2[2:N] .* (n[2:N] - n[1:N-1]).^2
 
-        name = :unknown
         return new(N, n, ε, p, ε_n_l, ε_n_r, ε_nn_l, ε_nn_r, name)
     end
+end
+
+function Table_EoS_Hermite(name::Symbol)
+    table = table_eos_base[name]
+    n = vec(table[:, 1])
+    ε = vec(table[:, 2])
+    p = vec(table[:, 3])
+    return Table_EoS_Hermite(n, ε, p; name=name)
 end
 function get_derivative0(Q::Vector, x::Vector)
     N = length(Q)
@@ -613,7 +652,7 @@ dH2(z) = -2z + 3z^2
 dH3(z) = 6z - 6z^2 
 
 
-function get_energy_density(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
+function get_energy_density(eos::Table_EoS_Hermite, val::Real; from::Symbol, units=:cgs)
     if from == :number_density
         n_val = val
         i = searchsortedfirst(eos.n, n_val) - 1
@@ -625,7 +664,7 @@ function get_energy_density(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
         ε_val = (eos.ε[i]*H0(x) + eos.ε[i+1]*H3(x) + eos.ε_n_l[i]*H1(x) + eos.ε_n_r[i]*H2(x))
         return ε_val * factor(units)
     else
-        error("sas")
+        error("Table_EoS_Hermite only implements from=:number_density")
     end
 end
 
@@ -637,8 +676,8 @@ function get_de_dn(eos, n_val)
     return de_dn_val
 end
 
-function get_pressure(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
-        if from == :number_density
+function get_pressure(eos::Table_EoS_Hermite, val::Real; from::Symbol, units=:cgs)
+    if from == :number_density
         n_val = val
         i = searchsortedfirst(eos.n, n_val) - 1
         if i == 0
@@ -650,7 +689,7 @@ function get_pressure(eos::Table_EoS, val::Real; from::Symbol, units=:cgs)
         p_val = (eos.ε[i]*dH0(x) + eos.ε[i+1]*dH3(x) + eos.ε_n_l[i]*dH1(x) + eos.ε_n_r[i]*dH2(x)) / (eos.n[i+1] - eos.n[i]) * n_val - ε_val
         return p_val * factor(units)
     else
-        error("sas")
+        error("Table_EoS_Hermite only implements from=:number_density")
     end
 end
 
