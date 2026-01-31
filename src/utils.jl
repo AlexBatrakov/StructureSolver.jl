@@ -16,6 +16,13 @@ LogRange(L, R, N) = 10.0 .^ LinRange(log10(L), log10(R), N)
     end
 
 function plot_radial_structure(RS_sol, model)
+    # Optional plotting support: PyPlot is not a hard dependency of the package.
+    try
+        @eval import PyPlot
+    catch
+        error("PyPlot is not available. Install it with `import Pkg; Pkg.add(\"PyPlot\")` and ensure matplotlib is installed for PyCall (or configure PyCall to use Conda).")
+    end
+
     α0, β0  = model.exparams[:α0], model.exparams[:β0]
     Qs = model.quantities
 
@@ -28,21 +35,21 @@ function plot_radial_structure(RS_sol, model)
 
     r = RS_sol.t
 
-    plot(r ./ km, μ ./ μ[end], label="μ / μ_s")
-    plot(r ./ km, ν ./ ν[end], label="ν / ν_s")
-    plot(r ./ km, φ, label="φ")
-    plot(r ./ km, ψ, label="ψ")
-    plot(r ./ km, p̃ ./ p̃[1], label="p̃ / p̃_c")
-    plot(r ./ km, M̃ ./ M̃[end], label="M̃ / M̃_s")
-    plot(r ./ km, 2.0 * μ ./ r, label="2μ/r")
+    PyPlot.plot(r ./ km, μ ./ μ[end], label="μ / μ_s")
+    PyPlot.plot(r ./ km, ν ./ ν[end], label="ν / ν_s")
+    PyPlot.plot(r ./ km, φ, label="φ")
+    PyPlot.plot(r ./ km, ψ, label="ψ")
+    PyPlot.plot(r ./ km, p̃ ./ p̃[1], label="p̃ / p̃_c")
+    PyPlot.plot(r ./ km, M̃ ./ M̃[end], label="M̃ / M̃_s")
+    PyPlot.plot(r ./ km, 2.0 * μ ./ r, label="2μ/r")
 
-    title("α0 = $(rnd(α0)), β0 = $(rnd(β0))\nm̃A = $(rnd(Qs[:m̃A]/M_sun)) Ms, R = $(rnd(Qs[:R]/km)) km, p̃_c = $(rnd(Qs[:p̃_c])) dyn/cm^3")
-    xlabel("r, km")
-    yscale("symlog", linthreshy=1e-4)
-    xscale("log")
-    xlim(left=1e-3)
-    legend()
-    show()
+    PyPlot.title("α0 = $(rnd(α0)), β0 = $(rnd(β0))\nm̃A = $(rnd(Qs[:m̃A]/M_sun)) Ms, R = $(rnd(Qs[:R]/km)) km, p̃_c = $(rnd(Qs[:p̃_c])) dyn/cm^3")
+    PyPlot.xlabel("r, km")
+    PyPlot.yscale("symlog", linthreshy=1e-4)
+    PyPlot.xscale("log")
+    PyPlot.xlim(left=1e-3)
+    PyPlot.legend()
+    PyPlot.show()
 
     return nothing
 end

@@ -6,7 +6,6 @@ module StructureSolver
 	#using ODEInterfaceDiffEq
 	#using BoundaryValueDiffEq
 	#using OrdinaryDiffEq
-	using PyPlot
 	using JLD
 	#using Dierckx
 	#using Roots

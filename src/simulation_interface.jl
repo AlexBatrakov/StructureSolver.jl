@@ -234,9 +234,8 @@ function calculate!(simulation::GridSimulation_old{T, P}) where {T <: AbstractMo
 		@time calculate!(family_simulation)
 		save_result!(grid, family_simulation.family, I_grid)
 
-			qs = family_simulation.family.quantities
-			plot(qs[:pc][:], -qs[:αA][:], label="$I_grid")
-			xscale("log")
+			# Plotting removed from core simulation code.
+			# If you want plots, do them in examples/ or in your own analysis scripts.
 	end
 	return simulation
 end
@@ -331,9 +330,8 @@ function calculate!(simulation::GridSimulation{T, P}, family_constructor) where 
 		@time calculate!(family_simulation)
 		save_result!(grid, family_simulation.family, I_grid)
 
-			qs = family_simulation.family.quantities
-			plot(qs[:pc][:], -qs[:αA][:], label="$I_grid")
-			xscale("log")
+			# Plotting removed from core simulation code.
+			# If you want plots, do them in examples/ or in your own analysis scripts.
 	end
 	return simulation
 end
