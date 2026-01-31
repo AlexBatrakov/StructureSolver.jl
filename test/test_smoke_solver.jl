@@ -16,5 +16,32 @@ using StructureSolver
     calculate!(sim)
 
     @test !isempty(sim.model.quantities)
-    @test any(haskey(sim.model.quantities, k) for k in (:mA, :m̃A, :R, :r_s))
+
+    expected_quantity_keys = (
+        :R,
+        :mA,
+        :m̃A,
+        :αA,
+        :φ∞,
+        :IA,
+        :pc,
+        :φc,
+        :bc_φ∞,
+        :cs_c,
+    )
+
+    for k in expected_quantity_keys
+        @test haskey(sim.model.quantities, k)
+        @test isfinite(sim.model.quantities[k])
+    end
+
+    @test sim.model.quantities[:R] > 0
+    @test sim.model.quantities[:mA] > 0
+    @test sim.model.quantities[:m̃A] > 0
+    @test sim.model.quantities[:IA] > 0
+    @test sim.model.quantities[:pc] > 0
+
+    @test !isempty(sim.model.derivatives)
+    @test haskey(sim.model.derivatives, :dφ∞_dφc)
+    @test isfinite(sim.model.derivatives[:dφ∞_dφc])
 end
