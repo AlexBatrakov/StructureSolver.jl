@@ -1,6 +1,8 @@
 # StructureSolver.jl
 
 [![CI](https://github.com/AlexBatrakov/StructureSolver.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexBatrakov/StructureSolver.jl/actions/workflows/ci.yml)
+[![Docs (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://AlexBatrakov.github.io/StructureSolver.jl/dev)
+[![Docs (stable)](https://img.shields.io/badge/docs-stable-blue.svg)](https://AlexBatrakov.github.io/StructureSolver.jl/stable)
 
 StructureSolver is a Julia package for solving 1D (spherically symmetric) relativistic stellar structure models in Damour-Esposito-Farese (DEF) scalar-tensor gravity, with helper tools for working with neutron-star equations of state (EoS).
 
@@ -39,6 +41,18 @@ For local development:
 ```julia
 julia> using Pkg
 julia> Pkg.develop(path="/path/to/StructureSolver.jl")
+```
+
+## Documentation
+
+- Dev docs: https://AlexBatrakov.github.io/StructureSolver.jl/dev
+- Stable docs (after tagging a release): https://AlexBatrakov.github.io/StructureSolver.jl/stable
+
+Build locally:
+
+```bash
+julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+julia --project=docs docs/make.jl
 ```
 
 ## Quick start (EoS)
