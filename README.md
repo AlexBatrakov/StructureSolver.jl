@@ -126,6 +126,22 @@ mass_Msun = sim.family.quantities[:mA] ./ M_sun
 radius_km = sim.family.quantities[:R] ./ 1e5
 ```
 
+## Plotting (optional)
+
+This package does **not** depend on `PyPlot` by default (so CI and headless runs do not require `matplotlib`).
+
+- Some helpers (e.g. `plot_radial_structure`) will attempt to `import PyPlot` only when called.
+- Some scripts in `examples/` use `PyPlot` explicitly.
+
+If you want plotting:
+
+```julia
+using Pkg
+Pkg.add("PyPlot")
+```
+
+If `PyPlot` fails to import `matplotlib` (common on fresh machines/CI), follow the `PyCall` guidance in the error message (either install `matplotlib` for your system Python, or reconfigure PyCall to use Conda).
+
 ## N-D grids (GeneralSimulation)
 
 `GeneralSimulation` uses `ShootingRegime` where each entry in the dicts can be either:
