@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it."
+title: "StructureSolver.jl"
+type: software
+authors:
+  - family-names: "Batrakov"
+    given-names: "Alexander"
+repository-code: "https://github.com/AlexBatrakov/StructureSolver.jl"
+url: "https://github.com/AlexBatrakov/StructureSolver.jl"
+license: MIT
+keywords:
+  - Julia
+  - astrophysics
+  - neutron stars
+  - general relativity
+  - scalar-tensor gravity
+  - equation of state
+  - numerical methods
+version: "0.1.2"
+date-released: "2026-02-01"

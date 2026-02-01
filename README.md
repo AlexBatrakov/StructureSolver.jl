@@ -281,6 +281,14 @@ To generate coverage locally:
 julia --project --code-coverage=user -e 'using Pkg; Pkg.test()'
 ```
 
+## Contributing
+
+See `CONTRIBUTING.md`.
+
+## Citing
+
+If you use this package in academic work, see `CITATION.cff`.
+
 ## License
 
 MIT. See `LICENSE`.
