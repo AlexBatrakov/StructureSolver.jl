@@ -21,6 +21,9 @@ Pkg.develop(path="/path/to/StructureSolver.jl")
 ## What to read next
 
 - [Quickstart](quickstart.md): minimal examples for EoS and a single solve.
+- [Tutorial: M–R curve](tutorial_mr.md): end-to-end family scan over central pressure.
 - [EoS](eos.md): equation-of-state interfaces and unit conventions.
 - [Simulations](simulations.md): regimes and simulation drivers.
+- [Examples](examples.md): copy-paste snippets.
+- [Troubleshooting](troubleshooting.md): common issues (PyPlot, docs deploy, etc.).
 - [API](api.md): auto-generated API reference from docstrings.

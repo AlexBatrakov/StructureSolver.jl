@@ -14,6 +14,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Quickstart" => "quickstart.md",
+        "Tutorial: M–R curve" => "tutorial_mr.md",
         "EoS" => "eos.md",
         "Simulations" => "simulations.md",
         "Examples" => "examples.md",
