@@ -94,6 +94,26 @@ radius_km = sim.model.quantities[:R] / 1e5
 @show mass_Msun radius_km
 ```
 
+## Figures
+
+<p align="center">
+  <img src="assets/DEF_M_R.png" width="720" alt="Mass–radius curves in GR and DEF gravity for three EoS">
+</p>
+
+<p align="center">
+  <em>Mass–radius relations for three equations of state in GR and DEF gravity.</em>
+  (<a href="assets/DEF_M_R.pdf">PDF</a>)
+</p>
+
+<p align="center">
+  <img src="assets/DEF_alphaA_M.png" width="720" alt="Scalarization parameter alpha_A vs mass in DEF gravity">
+</p>
+
+<p align="center">
+  <em>Scalarization parameter \u03b1A as a function of mass in DEF gravity.</em>
+  (<a href="assets/DEF_alphaA_M.pdf">PDF</a>)
+</p>
+
 <details>
 <summary><strong>Quick start (EoS)</strong></summary>
 
