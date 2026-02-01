@@ -16,6 +16,8 @@ makedocs(
         "Quickstart" => "quickstart.md",
         "EoS" => "eos.md",
         "Simulations" => "simulations.md",
+        "Examples" => "examples.md",
+        "Troubleshooting" => "troubleshooting.md",
         "API" => "api.md",
     ],
 )
