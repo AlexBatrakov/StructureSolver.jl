@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.julia-version }}" = "1.11" ]; then
-            julia --project --code-coverage=lcov -e 'using Pkg; Pkg.test()'
+            julia --project --code-coverage=user -e 'using Pkg; Pkg.test()'
           else
             julia --project -e 'using Pkg; Pkg.test()'
           fi
