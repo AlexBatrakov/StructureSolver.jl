@@ -4,28 +4,39 @@
 [![Docs (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://AlexBatrakov.github.io/StructureSolver.jl/dev)
 [![Docs (stable)](https://img.shields.io/badge/docs-stable-blue.svg)](https://AlexBatrakov.github.io/StructureSolver.jl/stable)
 
-StructureSolver is a Julia package for solving 1D (spherically symmetric) relativistic stellar structure models in Damour-Esposito-Farese (DEF) scalar-tensor gravity, with helper tools for working with neutron-star equations of state (EoS).
+StructureSolver is a Julia package for solving 1D (spherically symmetric) relativistic stellar structure models in Damour–Esposito–Farese (DEF) scalar-tensor gravity, with practical tools for neutron-star equations of state (EoS).
 
-The package is primarily geared towards research workflows (parameter scans, families of stellar models, and derivative/sensitivity extraction).
+It targets research and engineering-style workflows: single solves, parameter scans (families), N-D grids, and extraction of derived quantities and sensitivities.
 
-## What's inside
+## Highlights
 
-- **EoS implementations**
-  - `PWP_EoS` (piecewise polytrope; includes built-in low/high segments by name)
-  - `Polytropic_EoS` (simple polytrope)
-  - `Table_EoS` (tabulated EoS)
-  - Conversions/utilities: `get_pressure`, `get_density`, `get_number_density`, `get_energy_density`, `get_specific_enthalpy`, `get_sound_velocity`, `get_internal_energy`, `find_max_pressure`
-- **DEF scalar-tensor model**
-  - Coupling functions: `DEF1_CouplingFunction`, `DEF3_CouplingFunction`
-  - Model: `DEFp_Model`
-- **Simulation drivers**
-  - Single point: `SingleSimulation`
-  - One-parameter families (e.g. central pressure scans): `FamilySimulation`
-  - Multi-parameter grids (N-D scans): `GeneralSimulation` + `ShootingRegime`
-  - Regimes: `Simple_DirectRegime`, `Simple_ShootingRegime`, `ShootingRegime`
-- **Utilities & constants**
-  - `LogRange`
-  - Physical constants: `c`, `G`, `mp`, `M_sun`
+- **Physics scope**: relativistic stellar structure in DEF scalar–tensor gravity (TOV-like, with slow-rotation quantities).
+- **EoS toolbox**: piecewise polytropes and tabulated EoS + unit-consistent conversion helpers.
+- **Workflows**: single runs, one-parameter families (e.g. central pressure scans), and N-D grids with shooting.
+- **Outputs**: `model.quantities` (mass, radius, scalarization, etc.) and `model.derivatives` (response coefficients).
+
+## Quick links
+
+- Docs (dev): https://AlexBatrakov.github.io/StructureSolver.jl/dev
+- Tutorial (M–R curve): https://AlexBatrakov.github.io/StructureSolver.jl/dev/tutorial_mr/
+- Notation & outputs: https://AlexBatrakov.github.io/StructureSolver.jl/dev/notation/
+- API reference: https://AlexBatrakov.github.io/StructureSolver.jl/dev/api/
+
+## Quality signals
+
+- CI runs tests on Julia **1.10** and **1.11**.
+- Docs build is automated via GitHub Actions (Documenter).
+- Coverage is generated in CI and can be uploaded to Codecov (non-blocking; see `RELEASING.md`).
+- Plotting is **optional** (no hard `PyPlot`/`matplotlib` dependency at package load).
+
+## What’s inside (at a glance)
+
+- **EoS implementations**: `PWP_EoS`, `Polytropic_EoS`, `Table_EoS`
+- **EoS utilities**: `get_pressure`, `get_density`, `get_number_density`, `get_energy_density`, `get_specific_enthalpy`, `get_sound_velocity`, `get_internal_energy`, `find_max_pressure`
+- **DEF scalar-tensor model**: `DEFp_Model`, coupling functions `DEF1_CouplingFunction`, `DEF3_CouplingFunction`
+- **Simulation drivers**: `SingleSimulation`, `FamilySimulation`, `GeneralSimulation`
+- **Regimes**: `Simple_DirectRegime`, `Simple_ShootingRegime`, `ShootingRegime`
+- **Utilities/constants**: `LogRange`, `c`, `G`, `mp`, `M_sun`
 
 ## Installation
 
@@ -60,7 +71,31 @@ julia --project=docs docs/make.jl
 - The docs site publishes `/stable` after you push a tag like `v0.1.2`.
 - See `RELEASING.md` for the recommended release flow (TagBot) and dependency/compat automation (CompatHelper).
 
-## Quick start (EoS)
+## 30-second demo (EoS + single solve)
+
+```julia
+using StructureSolver
+
+eos = PWP_EoS(low_eos=:SLy, high_eos=:SLy)
+cf = DEF1_CouplingFunction()
+model = DEFp_Model{Float64}(cf, eos)
+
+int_params = IntParams(maxiters=1e4, dtmax=1.0, reltol=1e-10, abstol=1e-10)
+regime = Simple_DirectRegime(
+  Dict(:φc => 0.0, :pc => 1e35),
+  Dict(:α0 => 0.0, :β0 => 0.0),
+)
+
+sim = SingleSimulation(model, regime, int_params)
+calculate!(sim)
+
+mass_Msun = sim.model.quantities[:mA] / M_sun
+radius_km = sim.model.quantities[:R] / 1e5
+@show mass_Msun radius_km
+```
+
+<details>
+<summary><strong>Quick start (EoS)</strong></summary>
 
 ```julia
 using StructureSolver
@@ -73,7 +108,10 @@ eps = get_energy_density(eos, rho, from=:density)  # erg/cm^3
 cs = get_sound_velocity(eos, rho, from=:density)   # cm/s
 ```
 
-## Solve a single star (direct regime)
+</details>
+
+<details>
+<summary><strong>Solve a single star (direct regime)</strong></summary>
 
 Direct regime means you specify the inner parameters (e.g. central values) directly.
 
@@ -97,7 +135,10 @@ sim.model.quantities    # computed global quantities (Dict)
 sim.model.derivatives   # computed derivatives/sensitivities (Dict)
 ```
 
-## Solve with shooting (match boundary conditions)
+</details>
+
+<details>
+<summary><strong>Solve with shooting (match boundary conditions)</strong></summary>
 
 Shooting regime adjusts one or more "shooting" inner parameters to satisfy target boundary conditions on output quantities.
 
@@ -123,7 +164,10 @@ sim = SingleSimulation(model, regime, int_params)
 calculate!(sim)
 ```
 
-## Families (scan central pressure)
+</details>
+
+<details>
+<summary><strong>Families (scan central pressure)</strong></summary>
 
 `FamilySimulation` sweeps one (or several) parameters and stores the resulting `model.inparams`, `model.quantities`, and `model.derivatives` in N-D arrays.
 
@@ -145,7 +189,10 @@ mass_Msun = sim.family.quantities[:mA] ./ M_sun
 radius_km = sim.family.quantities[:R] ./ 1e5
 ```
 
-## Plotting (optional)
+</details>
+
+<details>
+<summary><strong>Plotting (optional)</strong></summary>
 
 This package does **not** depend on `PyPlot` by default (so CI and headless runs do not require `matplotlib`).
 
@@ -161,7 +208,10 @@ Pkg.add("PyPlot")
 
 If `PyPlot` fails to import `matplotlib` (common on fresh machines/CI), follow the `PyCall` guidance in the error message (either install `matplotlib` for your system Python, or reconfigure PyCall to use Conda).
 
-## N-D grids (GeneralSimulation)
+</details>
+
+<details>
+<summary><strong>N-D grids (GeneralSimulation)</strong></summary>
 
 `GeneralSimulation` uses `ShootingRegime` where each entry in the dicts can be either:
 
@@ -193,12 +243,20 @@ mA = sim.data.quantities[:mA]
 αA = sim.data.derivatives[:αA]
 ```
 
+</details>
+
 ## Testing
 
 From the repository root:
 
 ```bash
 julia --project -e 'using Pkg; Pkg.test()'
+```
+
+To generate coverage locally:
+
+```bash
+julia --project --code-coverage=user -e 'using Pkg; Pkg.test()'
 ```
 
 ## License
