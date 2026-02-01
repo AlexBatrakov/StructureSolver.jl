@@ -22,6 +22,7 @@ Pkg.develop(path="/path/to/StructureSolver.jl")
 
 - [Quickstart](quickstart.md): minimal examples for EoS and a single solve.
 - [Tutorial: M–R curve](tutorial_mr.md): end-to-end family scan over central pressure.
+- [Notation & outputs](notation.md): what the main `model.quantities` and `model.derivatives` keys mean.
 - [EoS](eos.md): equation-of-state interfaces and unit conventions.
 - [Simulations](simulations.md): regimes and simulation drivers.
 - [Examples](examples.md): copy-paste snippets.

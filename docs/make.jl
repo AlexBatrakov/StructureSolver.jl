@@ -15,6 +15,7 @@ makedocs(
         "Home" => "index.md",
         "Quickstart" => "quickstart.md",
         "Tutorial: M–R curve" => "tutorial_mr.md",
+        "Notation & outputs" => "notation.md",
         "EoS" => "eos.md",
         "Simulations" => "simulations.md",
         "Examples" => "examples.md",

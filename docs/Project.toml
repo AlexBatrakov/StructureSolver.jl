@@ -1,6 +1,5 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-StructureSolver = "86949bca-1401-4ad7-afb8-e041cb4ccbe4"
 
 [compat]
 Documenter = "1"
