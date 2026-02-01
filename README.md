@@ -3,6 +3,8 @@
 [![CI](https://github.com/AlexBatrakov/StructureSolver.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexBatrakov/StructureSolver.jl/actions/workflows/ci.yml)
 [![Docs (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://AlexBatrakov.github.io/StructureSolver.jl/dev)
 [![Docs (stable)](https://img.shields.io/badge/docs-stable-blue.svg)](https://AlexBatrakov.github.io/StructureSolver.jl/stable)
+[![License](https://img.shields.io/github/license/AlexBatrakov/StructureSolver.jl)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/AlexBatrakov/StructureSolver.jl?sort=semver)](https://github.com/AlexBatrakov/StructureSolver.jl/releases)
 
 StructureSolver is a Julia package for solving 1D (spherically symmetric) relativistic stellar structure models in Damour–Esposito–Farese (DEF) scalar-tensor gravity, with practical tools for neutron-star equations of state (EoS).
 
@@ -110,7 +112,7 @@ radius_km = sim.model.quantities[:R] / 1e5
 </p>
 
 <p align="center">
-  <em>Scalarization parameter \u03b1A as a function of mass in DEF gravity.</em>
+  <em>Scalarization parameter αA as a function of mass in DEF gravity.</em>
   (<a href="assets/DEF_alphaA_M.pdf">PDF</a>)
 </p>
 
