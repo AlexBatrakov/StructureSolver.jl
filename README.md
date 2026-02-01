@@ -55,6 +55,11 @@ julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.in
 julia --project=docs docs/make.jl
 ```
 
+## Releases
+
+- The docs site publishes `/stable` after you push a tag like `v0.1.2`.
+- See `RELEASING.md` for the recommended release flow (TagBot) and dependency/compat automation (CompatHelper).
+
 ## Quick start (EoS)
 
 ```julia

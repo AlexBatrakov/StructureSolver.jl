@@ -34,4 +34,22 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: julia --project -e 'using Pkg; Pkg.test()'
+        run: |
+          if [ "${{ matrix.julia-version }}" = "1.11" ]; then
+            julia --project --code-coverage=lcov -e 'using Pkg; Pkg.test()'
+          else
+            julia --project -e 'using Pkg; Pkg.test()'
+          fi
+
+      - name: Process coverage
+        if: matrix.julia-version == '1.11'
+        uses: julia-actions/julia-processcoverage@v1
+
+      - name: Upload coverage to Codecov
+        if: matrix.julia-version == '1.11'
+        uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
