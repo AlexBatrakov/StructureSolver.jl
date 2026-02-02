@@ -1,7 +1,7 @@
 name = "StructureSolver"
 uuid = "86949bca-1401-4ad7-afb8-e041cb4ccbe4"
-authors = ["Alexander Batrakov <batrakovalex.astro@gmail.com>"]
 version = "0.1.2"
+authors = ["Alexander Batrakov <batrakovalex.astro@gmail.com>"]
 
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
@@ -15,4 +15,5 @@ ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 
 [compat]
+JLD = "0.13"
 Roots = "2.2.10"
